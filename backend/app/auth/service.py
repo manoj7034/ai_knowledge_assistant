@@ -3,24 +3,26 @@ from sqlalchemy.orm import Session
 from app.repositories.user import UserRepository
 from app.models.user import User
 from app.auth.hashing import hash_password, verify_password
-from app.schemas.user import UserCreate
-from app.schemas.token import Token
 from app.schemas.user import UserCreate, UserLogin
+from app.schemas.token import Token
 from app.auth.jwt import create_access_token
+from app.exceptions.user import UserAlreadyExistsException
+from app.exceptions.auth import InvalidCredentialsException
 
 
 class AuthenticationService:
 
     def __init__(self, db: Session):
+        self.db = db
         self.user_repository = UserRepository(db)
 
     def register(
-        self,
-        user_create: UserCreate,
+    self,
+    user_create: UserCreate,
     ) -> User:
 
         if self.user_repository.exists(user_create.email):
-            raise ValueError("Email already exists")
+            raise UserAlreadyExistsException()
 
         user = User(
             email=user_create.email,
@@ -28,7 +30,16 @@ class AuthenticationService:
             hashed_password=hash_password(user_create.password),
         )
 
-        return self.user_repository.create(user)
+        try:
+            self.user_repository.create(user)
+            # self.user_repository.db.commit()
+            self.db.commit()
+        except Exception:
+            # self.user_repository.db.rollback()
+            self.db.rollback()
+            raise
+
+        return user
     
 
     def login(
@@ -41,13 +52,13 @@ class AuthenticationService:
         )
 
         if user is None:
-            raise ValueError("Invalid credentials")
+            raise InvalidCredentialsException()
 
         if not verify_password(
             credentials.password,
             user.hashed_password,
         ):
-            raise ValueError("Invalid credentials")
+            raise InvalidCredentialsException()
 
         return Token(
             access_token=create_access_token(user.id)

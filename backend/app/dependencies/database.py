@@ -4,6 +4,8 @@ from app.database.session import SessionLocal
 
 
 def get_db() -> Generator[Session, None, None]:
+    # Provide a database session for each request.
+    
     db = SessionLocal()
 
     try:

@@ -32,3 +32,14 @@ class BaseRepository(Generic[ModelType]):
     def delete(self, obj: ModelType):
         self.db.delete(obj)
         self.db.commit()
+
+    def update(self, obj: ModelType) -> ModelType:
+        self.db.flush()
+        self.db.refresh(obj)
+        return obj
+    
+    def save(self, obj: ModelType) -> ModelType:
+        self.db.add(obj)
+        self.db.flush()
+        self.db.refresh(obj)
+        return obj

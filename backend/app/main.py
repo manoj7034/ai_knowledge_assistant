@@ -1,6 +1,9 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
+
 from app.config.settings import settings
+from app.api.v1.router import api_router
+from app.exceptions.handlers import register_exception_handlers
 
 
 @asynccontextmanager
@@ -20,6 +23,10 @@ app = FastAPI(
 )
 
 
+register_exception_handlers(app)
+
+
+
 @app.get("/health", tags=["Health"])
 async def health_check():
     return {
@@ -27,3 +34,9 @@ async def health_check():
         "service": settings.APP_NAME,
         "version": settings.APP_VERSION,
     }
+
+
+app.include_router(
+    api_router,
+    prefix="/api/v1",
+)
