@@ -1,10 +1,13 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parents[2]
 
 
 class Settings(BaseSettings):
     APP_NAME: str = "Enterprise AI Platform"
     APP_VERSION: str = "0.1.0"
-    APP_ENV : str = "development"
+    APP_ENV: str = "development"
     DEBUG: bool = True
 
     DATABASE_URL: str
@@ -13,11 +16,12 @@ class Settings(BaseSettings):
     SECRET_KEY: str
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    REFRESH_TOKEN_EXPIRE_DAYS: int =7
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=BASE_DIR / ".env",
         extra="ignore",
     )
 
 
-settings = Settings()
+settings = Settings() # type: ignore

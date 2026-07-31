@@ -1,3 +1,4 @@
+from uuid import UUID
 from typing import Generic, TypeVar
 
 from sqlalchemy import select
@@ -15,31 +16,21 @@ class BaseRepository(Generic[ModelType]):
         self.db = db
         self.model = model
 
-    def get(self, entity_id):
+    def get_by_id(self, entity_id: UUID,) -> ModelType | None:
         stmt = select(self.model).where(self.model.id == entity_id)
         return self.db.scalar(stmt)
 
-    def get_all(self):
+    def get_all(self) -> list[ModelType]:
         stmt = select(self.model)
         return list(self.db.scalars(stmt).all())
 
-    def create(self, obj: ModelType):
-        self.db.add(obj)
-        self.db.flush()
-        self.db.refresh(obj)
-        return obj
-
     def delete(self, obj: ModelType):
         self.db.delete(obj)
-        self.db.commit()
-
-    def update(self, obj: ModelType) -> ModelType:
-        self.db.flush()
-        self.db.refresh(obj)
-        return obj
+        # self.db.commit()
     
     def save(self, obj: ModelType) -> ModelType:
         self.db.add(obj)
         self.db.flush()
         self.db.refresh(obj)
         return obj
+

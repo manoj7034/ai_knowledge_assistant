@@ -4,8 +4,8 @@ from app.repositories.user import UserRepository
 from app.models.user import User
 from app.auth.hashing import hash_password, verify_password
 from app.schemas.user import UserCreate, UserLogin
-from app.schemas.token import Token
-from app.auth.jwt import create_access_token
+from app.schemas.token import TokenResponse
+from app.auth.token_service import TokenService
 from app.exceptions.user import UserAlreadyExistsException
 from app.exceptions.auth import InvalidCredentialsException
 
@@ -31,7 +31,7 @@ class AuthenticationService:
         )
 
         try:
-            self.user_repository.create(user)
+            self.user_repository.save(user)
             # self.user_repository.db.commit()
             self.db.commit()
         except Exception:
@@ -45,7 +45,7 @@ class AuthenticationService:
     def login(
         self,
         credentials: UserLogin,
-    ) -> Token:
+    ) -> TokenResponse:
 
         user = self.user_repository.get_by_email(
             credentials.email
@@ -60,6 +60,7 @@ class AuthenticationService:
         ):
             raise InvalidCredentialsException()
 
-        return Token(
-            access_token=create_access_token(user.id)
-        )
+        # return TokenResponse(access_token=create_access_token(user.id),)
+        token_service = TokenService(self.db)
+
+        return token_service.create_token_pair(user)

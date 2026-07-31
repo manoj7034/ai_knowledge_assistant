@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.auth.service import AuthenticationService
 from app.dependencies.services import get_authentication_service
-from app.schemas.token import Token
+from app.schemas.token import TokenResponse
 from app.schemas.user import UserCreate, UserLogin, UserResponse
 
 router = APIRouter(
@@ -27,7 +27,7 @@ def register(
 
 @router.post(
     "/login",
-    response_model=Token,
+    response_model=TokenResponse,
 )
 def login(
     credentials: UserLogin,

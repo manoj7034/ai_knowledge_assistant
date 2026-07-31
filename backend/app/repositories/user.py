@@ -17,9 +17,5 @@ class UserRepository(BaseRepository[User]):
 
     def exists(self, email: str) -> bool:
         return self.get_by_email(email) is not None
-
-    def get_by_id(self, user_id: UUID) -> User | None:
-        stmt = select(User).where(User.id == user_id)
-        return self.db.scalar(stmt)
     
     
