@@ -3,7 +3,7 @@ from uuid import UUID
 from jose import jwt, JWTError, ExpiredSignatureError
 
 from app.config.settings import settings
-from app.exceptions.auth import ExpiredTokenException, InvalidTokenException
+from app.exceptions.auth import ExpiredAccessTokenException, InvalidAccessTokenException
 
 
 def create_access_token(user_id: UUID,) -> str:
@@ -35,15 +35,15 @@ def decode_access_token(token: str) -> dict:
         )
 
     except ExpiredSignatureError:
-        raise ExpiredTokenException()
+        raise ExpiredAccessTokenException()
 
     except JWTError:
-        raise InvalidTokenException()
+        raise InvalidAccessTokenException()
 
     if payload.get("type") != "access":
-        raise InvalidTokenException()
+        raise InvalidAccessTokenException()
 
     if payload.get("sub") is None:
-        raise InvalidTokenException()
+        raise InvalidAccessTokenException()
 
     return payload

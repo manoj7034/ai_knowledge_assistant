@@ -4,7 +4,7 @@ from app.repositories.user import UserRepository
 from app.models.user import User
 from app.auth.hashing import hash_password, verify_password
 from app.schemas.user import UserCreate, UserLogin
-from app.schemas.token import TokenResponse
+from app.schemas.token import TokenResponse, LogoutRequest
 from app.auth.token_service import TokenService
 from app.exceptions.user import UserAlreadyExistsException
 from app.exceptions.auth import InvalidCredentialsException
@@ -64,3 +64,15 @@ class AuthenticationService:
         token_service = TokenService(self.db)
 
         return token_service.create_token_pair(user)
+
+
+    def refresh(self, refresh_token: str,) -> TokenResponse:
+        token_service = TokenService(self.db)
+
+        return token_service.refresh_token(refresh_token,)
+
+
+    def logout(self, request: LogoutRequest,) -> None:
+        token_service = TokenService(self.db)
+
+        token_service.logout(request.refresh_token)

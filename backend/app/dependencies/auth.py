@@ -3,12 +3,14 @@ from uuid import UUID
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
+from jose import JWTError, ExpiredSignatureError
 
 from app.auth.jwt import decode_access_token
 from app.dependencies.database import get_db
 from app.models.user import User
 from app.repositories.user import UserRepository
-from app.exceptions.user import UserNotFoundException
+from app.exceptions.user import InactiveUserException, InsufficientPermissionsException
+from app.exceptions.auth import ExpiredAccessTokenException, InvalidAccessTokenException
 
 
 oauth2_scheme = OAuth2PasswordBearer(
@@ -20,15 +22,44 @@ def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db),
 ) -> User:
-    payload = decode_access_token(token)
+    try:
+        payload = decode_access_token(token)
+    except ExpiredSignatureError:
+        raise ExpiredAccessTokenException()
+    except JWTError:
+        raise InvalidAccessTokenException()
 
-    user_id = UUID(payload["sub"])
+    subject = payload.get("sub")
+    if subject is None:
+        raise InvalidAccessTokenException()
+
+    try:
+        user_id = UUID(subject)
+    except ValueError:
+        raise InvalidAccessTokenException()
 
     repository = UserRepository(db)
-
     user = repository.get_by_id(user_id)
 
     if user is None:
-        raise UserNotFoundException()
+        raise InvalidAccessTokenException()
+
+    if not user.is_active:
+        raise InactiveUserException()
+
+    if payload.get("type") != "access":
+        raise InvalidAccessTokenException()
 
     return user
+
+
+def get_current_superuser(
+        current_user: User = Depends(
+            get_current_user,
+        ),
+) -> User:
+
+    if not current_user.is_superuser:
+        raise InsufficientPermissionsException()
+
+    return current_user

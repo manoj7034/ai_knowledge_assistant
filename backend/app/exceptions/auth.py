@@ -7,11 +7,21 @@ class InvalidCredentialsException(AppException):
     detail = "Invalid email or password."
 
 
-class InvalidTokenException(AppException):
+class InvalidAccessTokenException(AppException):
     status_code = status.HTTP_401_UNAUTHORIZED
-    detail = "Invalid authentication token."
+    detail = "Invalid access token."
 
 
-class ExpiredTokenException(AppException):
+class ExpiredAccessTokenException(AppException):
     status_code = status.HTTP_401_UNAUTHORIZED
-    detail = "Authentication token has expired."
+    detail = "Access token has expired."
+
+
+class InvalidRefreshTokenException(AppException):
+    status_code = status.HTTP_401_UNAUTHORIZED
+    detail = "Invalid refresh token."
+
+
+class RefreshTokenExpiredException(AppException):
+    status_code = status.HTTP_401_UNAUTHORIZED
+    detail = "Refresh token has expired."

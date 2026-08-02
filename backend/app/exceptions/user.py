@@ -15,3 +15,9 @@ class UserNotFoundException(AppException):
 class InactiveUserException(AppException):
     status_code = status.HTTP_403_FORBIDDEN
     detail = "User account is inactive."
+
+
+class InsufficientPermissionsException(AppException):
+    status_code = status.HTTP_403_FORBIDDEN
+    detail = "You do not have permission to perform this action."
+

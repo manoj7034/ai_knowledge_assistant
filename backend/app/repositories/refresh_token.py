@@ -16,6 +16,18 @@ class RefreshTokenRepository(BaseRepository[RefreshToken]):
         stmt = select(RefreshToken).where(RefreshToken.token_hash == token_hash)
         return self.db.scalar(stmt)
 
+    def get_active_by_hash(self, token_hash: str,) -> RefreshToken | None:
+        stmt = (
+            select(RefreshToken)
+            .where(
+                RefreshToken.token_hash == token_hash,
+                RefreshToken.revoked_at.is_(None)
+            )
+        )
+
+        return self.db.scalar(stmt)
+
+
     def revoke(self, refresh_token: RefreshToken,) -> None:
         refresh_token.revoked_at = datetime.now(UTC)
         self.db.flush()
