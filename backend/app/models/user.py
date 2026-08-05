@@ -6,6 +6,7 @@ from app.models.base_model import BaseModel
 
 if TYPE_CHECKING:
     from app.models.refresh_token import RefreshToken
+    from app.models.document import Document
 
 
 class User(BaseModel):
@@ -42,5 +43,10 @@ class User(BaseModel):
 
     refresh_tokens: Mapped[list["RefreshToken"]] = relationship(
         back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
+    documents: Mapped[list["Document"]] = relationship(
+        back_populates="owner",
         cascade="all, delete-orphan",
     )
