@@ -10,15 +10,15 @@ class StorageProvider(ABC):
         file_path: Path,
         destination: str,
     ) -> str:
-        # save a file and return its storage.
+        """Save a file and return its storage path."""
         raise NotImplementedError
 
     @abstractmethod
     def delete(
         self,
-        storage_path: Path,
+        storage_path: str,
     ) -> None:
-        # Delete stored file.
+        """Delete a stored file."""
         raise NotImplementedError
 
     @abstractmethod
@@ -26,5 +26,5 @@ class StorageProvider(ABC):
         self,
         storage_path: str,
     ) -> bool:
-        # Check whether a file exists.
+        """Check whether a file exists."""
         raise NotImplementedError

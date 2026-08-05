@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int =7
 
     STORAGE_PROVIDER: str = "local"
+    STORAGE_PATH: str = "storage"
     LOCAL_STORAGE_PATH: str = "./storage"
 
     CHUNK_SIZE: int = 1000

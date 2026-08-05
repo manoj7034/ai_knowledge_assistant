@@ -1,14 +1,16 @@
 from pathlib import Path
-from uuid import UUID, uuid4
+from uuid import uuid4
+from uuid import UUID
 
 from sqlalchemy.orm import Session
 
-from app.exceptions.document import DocumentNotFoundException
 from app.models.document import Document
 from app.models.user import User
+from app.models.enums import ProcessingStatus
 from app.repositories.document import DocumentRepository
-from app.storage.base import StorageProvider
 from app.services.document_processing_service import DocumentProcessingService
+from app.storage.base import StorageProvider
+from app.exceptions.document import DocumentNotFoundException
 
 
 class DocumentService:
@@ -17,21 +19,22 @@ class DocumentService:
         self,
         db: Session,
         storage: StorageProvider,
+        processing_service: DocumentProcessingService,
     ):
         self.db = db
-        self.repository = DocumentRepository(db)
-        self.storage = storage
-        self.processing_service = DocumentProcessingService(db)
 
-    # -------------------------------------------------------------------------
-    # Private Helpers
-    # -------------------------------------------------------------------------
+        self.repository = DocumentRepository(db)
+
+        self.storage = storage
+        self.processing_service = processing_service
 
     def _generate_filename(
         self,
         original_filename: str,
     ) -> str:
+
         extension = Path(original_filename).suffix
+
         return f"{uuid4()}{extension}"
 
     def _build_storage_path(
@@ -39,11 +42,8 @@ class DocumentService:
         owner: User,
         filename: str,
     ) -> str:
-        return f"{owner.id}/{filename}"
 
-    # -------------------------------------------------------------------------
-    # Public Methods
-    # -------------------------------------------------------------------------
+        return f"{owner.id}/{filename}"
 
     def upload_document(
         self,
@@ -56,7 +56,7 @@ class DocumentService:
     ) -> Document:
 
         generated_filename = self._generate_filename(
-            original_filename
+            original_filename,
         )
 
         storage_path = self._build_storage_path(
@@ -76,22 +76,23 @@ class DocumentService:
             content_type=content_type,
             file_size=file_size,
             storage_path=saved_path,
+            processing_status=ProcessingStatus.PENDING,
         )
 
-        try:
-            self.repository.save(document)
-            self.db.commit()
-            self.db.refresh(document)
-            self.processing_service.process_document(document)
+        self.repository.save(document)
 
-            return document
+        self.db.commit()
+        self.db.refresh(document)
 
-        except Exception:
-            self.db.rollback()
+        #
+        # Process the document
+        #
 
-            self.storage.delete(saved_path) # type: ignore
+        self.processing_service.process_document(
+            document,
+        )
 
-            raise
+        return document
 
     def list_documents(
         self,
@@ -124,20 +125,17 @@ class DocumentService:
         document_id: UUID,
     ) -> None:
 
-        document = self.get_document(
-            owner,
+        document = self.repository.get_by_id_and_owner(
             document_id,
+            owner.id,
         )
 
-        try:
-            self.storage.delete(
-                document.storage_path, # type: ignore
-            )
+        if document is None:
+            raise DocumentNotFoundException()
 
-            self.repository.delete(document)
+        if self.storage.exists(document.storage_path):
+            self.storage.delete(document.storage_path)
 
-            self.db.commit()
+        self.repository.delete(document)
 
-        except Exception:
-            self.db.rollback()
-            raise
+        self.db.commit()

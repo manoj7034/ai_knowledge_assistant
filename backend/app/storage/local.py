@@ -39,14 +39,14 @@ class LocalStorage(StorageProvider):
 
         return str(destination_path)
 
-    def delete( # type: ignore
+    def delete(
         self,
         storage_path: str,
     ) -> None:
 
         path = Path(storage_path)
 
-        if path.exists():
+        if path.is_file():
             path.unlink()
 
     def exists(
