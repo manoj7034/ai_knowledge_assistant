@@ -35,6 +35,10 @@ class Settings(BaseSettings):
     WEAVIATE_HTTP_PORT: int = 8080
     WEAVIATE_GRPC_PORT: int = 50051
 
+    GEMINI_API_KEY: str
+    LLM_MODEL: str
+    LLM_PROVIDER: str = "ollama"
+
 
     model_config = SettingsConfigDict(
         env_file=BASE_DIR / ".env",

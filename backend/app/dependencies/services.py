@@ -10,6 +10,8 @@ from app.services.document_service import DocumentService
 from app.storage.base import StorageProvider
 from app.vectorstores.weaviate_store import WeaviateStore
 from app.services.search_service import SearchService
+from app.llms.factory import LLMProviderFactory
+from app.services.chat_service import ChatService
 
 
 def get_authentication_service(
@@ -60,9 +62,22 @@ def get_document_service(
     )
 
 
-def get_search_service() -> SearchService:
+def get_search_service(
+        vector_store: WeaviateStore = Depends(get_vector_store),
+        ) -> SearchService:
 
     return SearchService(
         embedding_service=EmbeddingService(),
-        vector_store=WeaviateStore(),
+        vector_store=vector_store,
+    )
+
+
+def get_chat_service(
+        vector_store: WeaviateStore = Depends(get_vector_store),
+        ) -> ChatService:
+
+    return ChatService(
+        embedding_service=EmbeddingService(),
+        vector_store=vector_store,
+        llm=LLMProviderFactory.get_provider(),
     )

@@ -103,7 +103,7 @@ class WeaviateStore:
         collection.data.insert_many(objects)
 
 
-    def search(
+    def semantic_search(
             self, 
             *, 
             query_vector: list[float], 
@@ -112,7 +112,7 @@ class WeaviateStore:
             ) -> list[dict[str, Any]]:
 
         collection = self.client.collections.get(
-        settings.WEAVIATE_COLLECTION,
+            settings.WEAVIATE_COLLECTION,
     )
 
         response = collection.query.near_vector(
@@ -122,15 +122,31 @@ class WeaviateStore:
             return_metadata=["distance"],
         )
 
-        return [
+        results: list[dict[str, Any]] = []
+
+        for obj in response.objects:
+
+            distance = obj.metadata.distance
+            if distance is None:
+                score = 0.0
+            else:
+                score = round(1.0 - distance, 4)
+
+            results.append(
             {
-                "id": str(obj.uuid),
-                "distance": obj.metadata.distance,
-                "properties": obj.properties,
+                "chunk_id": str(obj.uuid),
+                "document_id": obj.properties["document_id"],
+                "filename": obj.properties["original_filename"],
+                "content": obj.properties["content"],
+                "chunk_index": obj.properties["chunk_index"],
+                "content_type": obj.properties["content_type"],
+                "score": score,
             }
-            for obj in response.objects
-        ]
+            )
+            
 
+        return results
 
+    
     def close(self) -> None:
         self.client.close()

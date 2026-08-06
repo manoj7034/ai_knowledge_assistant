@@ -24,7 +24,7 @@ class SearchService:
             [query]
         )[0]
 
-        return self.vector_store.search(
+        return self.vector_store.semantic_search(
             query_vector=vector,
             owner_id=owner_id,
             limit=limit,
