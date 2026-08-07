@@ -1,5 +1,5 @@
-from pydantic import BaseModel
 from uuid import UUID
+from pydantic import BaseModel
 
 
 class SearchResult(BaseModel):
@@ -12,5 +12,6 @@ class SearchResult(BaseModel):
     score: float
 
 
-class SearchResponse(BaseModel):
-    results: list[SearchResult]
+class HybridSearchResponse(BaseModel):
+    semantic: list[SearchResult]
+    keyword: list[SearchResult]

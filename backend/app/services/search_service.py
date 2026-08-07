@@ -20,12 +20,24 @@ class SearchService:
         limit: int = 5,
     ):
 
-        vector = self.embedding_service.generate_embeddings(
-            [query]
+        query_vector = self.embedding_service.generate_embeddings(
+            [query],
         )[0]
 
-        return self.vector_store.semantic_search(
-            query_vector=vector,
+        semantic_results = self.vector_store.semantic_search(
+            query_vector=query_vector,
             owner_id=owner_id,
             limit=limit,
         )
+
+        keyword_results = self.vector_store.keyword_search(
+            query=query,
+            owner_id=owner_id,
+            limit=limit,
+        )
+        
+        return {
+            "semantic": semantic_results,
+            "keyword": keyword_results,
+        }
+    

@@ -174,12 +174,15 @@ class WeaviateStore:
 
         return [
         {
+            "chunk_id": str(obj.uuid),
             "document_id": obj.properties["document_id"],
-            "content": obj.properties["content"],
             "filename": obj.properties["original_filename"],
+            "content": obj.properties["content"],
             "chunk_index": obj.properties["chunk_index"],
+            "content_type": obj.properties["content_type"],
             "score": float(obj.metadata.score or 0),
         }
+
         for obj in response.objects
     ]
     
