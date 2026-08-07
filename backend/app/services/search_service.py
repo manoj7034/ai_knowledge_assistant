@@ -1,5 +1,6 @@
 from app.embeddings.service import EmbeddingService
 from app.vectorstores.weaviate_store import WeaviateStore
+from app.retrieval.rrf import ReciprocalRankFusion
 
 
 class SearchService:
@@ -8,9 +9,11 @@ class SearchService:
         self,
         embedding_service: EmbeddingService,
         vector_store: WeaviateStore,
+        rank_fusion: ReciprocalRankFusion,
     ):
         self.embedding_service = embedding_service
         self.vector_store = vector_store
+        self.rank_fusion = rank_fusion
 
     def search(
         self,
@@ -35,9 +38,15 @@ class SearchService:
             owner_id=owner_id,
             limit=limit,
         )
+
+        fusion_results = self.rank_fusion.fuse(
+            semantic_results,
+            keyword_results,
+        )
         
         return {
             "semantic": semantic_results,
             "keyword": keyword_results,
+            "fusion": fusion_results,
         }
     

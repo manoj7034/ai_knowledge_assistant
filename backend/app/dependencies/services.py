@@ -4,14 +4,18 @@ from sqlalchemy.orm import Session
 from app.auth.service import AuthenticationService
 from app.dependencies.database import get_db
 from app.dependencies.storage import get_storage_provider
-from app.services.document_processing_service import DocumentProcessingService
-from app.services.document_service import DocumentService
-from app.storage.base import StorageProvider
-from app.services.search_service import SearchService
-from app.services.chat_service import ChatService
 from app.embeddings.manager import get_embedding_service
 from app.vectorstores.manager import get_vector_store
 from app.llms.manager import get_llm
+from app.embeddings.service import EmbeddingService
+from app.vectorstores.weaviate_store import WeaviateStore
+from app.llms.base import LLMProvider
+from app.retrieval.rrf import ReciprocalRankFusion
+from app.services.chat_service import ChatService
+from app.services.document_processing_service import DocumentProcessingService
+from app.services.document_service import DocumentService
+from app.services.search_service import SearchService
+from app.storage.base import StorageProvider
 
 
 def get_authentication_service(
@@ -20,28 +24,20 @@ def get_authentication_service(
     return AuthenticationService(db)
 
 
-# def get_embedding_service() -> EmbeddingService:
-#     return EmbeddingService()
-
-
-# def get_vector_store():
-#     store = WeaviateStore()
-
-#     try:
-#         yield store
-
-#     finally:
-#         store.close()
+def get_rank_fusion() -> ReciprocalRankFusion:
+    return ReciprocalRankFusion()
 
 
 def get_document_processing_service(
     db: Session = Depends(get_db),
+    embedding_service: EmbeddingService = Depends(get_embedding_service),
+    vector_store: WeaviateStore = Depends(get_vector_store),
 ) -> DocumentProcessingService:
 
     return DocumentProcessingService(
         db=db,
-        embedding_service=get_embedding_service(),
-        vector_store=get_vector_store(),
+        embedding_service=embedding_service,
+        vector_store=vector_store,
     )
 
 
@@ -60,18 +56,27 @@ def get_document_service(
     )
 
 
-def get_search_service() -> SearchService:
+def get_search_service(
+    embedding_service: EmbeddingService = Depends(get_embedding_service),
+    vector_store: WeaviateStore = Depends(get_vector_store),
+    rank_fusion: ReciprocalRankFusion = Depends(get_rank_fusion),
+) -> SearchService:
 
     return SearchService(
-        embedding_service=get_embedding_service(),
-        vector_store=get_vector_store(),
+        embedding_service=embedding_service,
+        vector_store=vector_store,
+        rank_fusion=rank_fusion,
     )
 
 
-def get_chat_service() -> ChatService:
+def get_chat_service(
+    embedding_service: EmbeddingService = Depends(get_embedding_service),
+    vector_store: WeaviateStore = Depends(get_vector_store),
+    llm: LLMProvider = Depends(get_llm),
+) -> ChatService:
 
     return ChatService(
-        embedding_service=get_embedding_service(),
-        vector_store=get_vector_store(),
-        llm=get_llm(),
+        embedding_service=embedding_service,
+        vector_store=vector_store,
+        llm=llm,
     )

@@ -1,28 +1,26 @@
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 
 from app.api.v1.router import api_router
 from app.config.settings import settings
-from app.embeddings.manager import initialize_embedding_service
+from app.core.app_state import (
+    initialize_app_state,
+    shutdown_app_state,
+)
 from app.exceptions.handlers import register_exception_handlers
-from app.llms.manager import initialize_llm, shutdown_llm
-from app.vectorstores.manager import initialize_vector_store, shutdown_vector_store
-
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Runs once during application startup
-    # and once during shutdown.
-    
+    """
+    Runs once during application startup
+    and once during shutdown.
+    """
 
     print("Starting Enterprise AI Platform...")
 
-    # Initialize shared services
-
-    initialize_embedding_service()
-    initialize_vector_store()
-    initialize_llm()
+    initialize_app_state(app)
 
     print("Enterprise AI Platform is ready.")
 
@@ -30,8 +28,7 @@ async def lifespan(app: FastAPI):
 
     print("Shutting down Enterprise AI Platform...")
 
-    shutdown_vector_store()
-    shutdown_llm()
+    shutdown_app_state(app)
 
     print("Resources released.")
 

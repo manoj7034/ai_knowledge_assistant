@@ -15,3 +15,8 @@ class SearchResult(BaseModel):
 class HybridSearchResponse(BaseModel):
     semantic: list[SearchResult]
     keyword: list[SearchResult]
+    fusion: list[SearchResult]
+
+
+class FusionSearchResult(SearchResult):
+    rrf_score: float
