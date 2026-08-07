@@ -2,7 +2,7 @@ import weaviate
 
 from weaviate.classes.config import Configure, Property, DataType
 from weaviate.classes.data import DataObject
-from weaviate.classes.query import Filter
+from weaviate.classes.query import Filter, MetadataQuery
 from typing import Any
 
 from app.config.settings import settings
@@ -147,6 +147,42 @@ class WeaviateStore:
 
         return results
 
+
+    def keyword_search(
+            self,
+            *,
+            query: str,
+            owner_id: str,
+            limit: int = 5,
+    ) -> list[dict[str, Any]]:
+
+        collection = self.client.collections.get(
+            settings.WEAVIATE_COLLECTION,
+        )
+
+        response = collection.query.bm25(
+        query=query,
+        query_properties=["content"],
+        filters=Filter.by_property(
+            "owner_id",
+        ).equal(owner_id),
+        limit=limit,
+        return_metadata=MetadataQuery(
+            score=True,
+        ),
+    )
+
+        return [
+        {
+            "document_id": obj.properties["document_id"],
+            "content": obj.properties["content"],
+            "filename": obj.properties["original_filename"],
+            "chunk_index": obj.properties["chunk_index"],
+            "score": float(obj.metadata.score or 0),
+        }
+        for obj in response.objects
+    ]
+    
     
     def close(self) -> None:
         self.client.close()

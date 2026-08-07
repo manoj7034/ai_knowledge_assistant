@@ -4,14 +4,14 @@ from sqlalchemy.orm import Session
 from app.auth.service import AuthenticationService
 from app.dependencies.database import get_db
 from app.dependencies.storage import get_storage_provider
-from app.embeddings.service import EmbeddingService
 from app.services.document_processing_service import DocumentProcessingService
 from app.services.document_service import DocumentService
 from app.storage.base import StorageProvider
-from app.vectorstores.weaviate_store import WeaviateStore
 from app.services.search_service import SearchService
-from app.llms.factory import LLMProviderFactory
 from app.services.chat_service import ChatService
+from app.embeddings.manager import get_embedding_service
+from app.vectorstores.manager import get_vector_store
+from app.llms.manager import get_llm
 
 
 def get_authentication_service(
@@ -20,30 +20,28 @@ def get_authentication_service(
     return AuthenticationService(db)
 
 
-def get_embedding_service() -> EmbeddingService:
-    return EmbeddingService()
+# def get_embedding_service() -> EmbeddingService:
+#     return EmbeddingService()
 
 
-def get_vector_store():
-    store = WeaviateStore()
+# def get_vector_store():
+#     store = WeaviateStore()
 
-    try:
-        yield store
+#     try:
+#         yield store
 
-    finally:
-        store.close()
+#     finally:
+#         store.close()
 
 
 def get_document_processing_service(
     db: Session = Depends(get_db),
-    embedding_service: EmbeddingService = Depends(get_embedding_service),
-    vector_store: WeaviateStore = Depends(get_vector_store),
 ) -> DocumentProcessingService:
 
     return DocumentProcessingService(
         db=db,
-        embedding_service=embedding_service,
-        vector_store=vector_store,
+        embedding_service=get_embedding_service(),
+        vector_store=get_vector_store(),
     )
 
 
@@ -62,22 +60,18 @@ def get_document_service(
     )
 
 
-def get_search_service(
-        vector_store: WeaviateStore = Depends(get_vector_store),
-        ) -> SearchService:
+def get_search_service() -> SearchService:
 
     return SearchService(
-        embedding_service=EmbeddingService(),
-        vector_store=vector_store,
+        embedding_service=get_embedding_service(),
+        vector_store=get_vector_store(),
     )
 
 
-def get_chat_service(
-        vector_store: WeaviateStore = Depends(get_vector_store),
-        ) -> ChatService:
+def get_chat_service() -> ChatService:
 
     return ChatService(
-        embedding_service=EmbeddingService(),
-        vector_store=vector_store,
-        llm=LLMProviderFactory.get_provider(),
+        embedding_service=get_embedding_service(),
+        vector_store=get_vector_store(),
+        llm=get_llm(),
     )
