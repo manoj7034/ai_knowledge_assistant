@@ -25,5 +25,6 @@ class HybridSearchResponse(BaseModel):
     keyword: list[SearchResult]
     fusion: list[SearchResult]
     reranked: list[RerankedSearchResult]
+    compressed: list[RerankedSearchResult]
 
 

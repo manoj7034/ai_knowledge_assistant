@@ -4,6 +4,7 @@ from app.embeddings.service import EmbeddingService
 from app.llms.base import LLMProvider
 from app.vectorstores.weaviate_store import WeaviateStore
 from app.rerankers.service import CrossEncoderService
+from app.compression.service import ContextCompressionService
 
 
 def get_embedding_service(
@@ -25,6 +26,13 @@ def get_reranker(
 ) -> CrossEncoderService:
 
     return request.app.state.reranker
+
+
+def get_compressor(
+    request: Request,
+) -> ContextCompressionService:
+
+    return request.app.state.compressor
 
 
 def get_llm(

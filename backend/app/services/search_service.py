@@ -2,6 +2,7 @@ from app.embeddings.service import EmbeddingService
 from app.vectorstores.weaviate_store import WeaviateStore
 from app.retrieval.rrf import ReciprocalRankFusion
 from app.rerankers.service import CrossEncoderService
+from app.compression.service import ContextCompressionService
 
 
 class SearchService:
@@ -12,11 +13,13 @@ class SearchService:
         vector_store: WeaviateStore,
         rank_fusion: ReciprocalRankFusion,
         reranker: CrossEncoderService,
+        compressor: ContextCompressionService
     ):
         self.embedding_service = embedding_service
         self.vector_store = vector_store
         self.rank_fusion = rank_fusion
         self.reranker = reranker
+        self.compressor = compressor
 
     def search(
         self,
@@ -51,11 +54,17 @@ class SearchService:
             query=query,
             documents=fusion_results,
         )
+
+        compressed_results = self.compressor.compress(
+            reranked_results,
+            threshold=0.0,
+        )
         
         return {
             "semantic": semantic_results,
             "keyword": keyword_results,
             "fusion": fusion_results,
             "reranked": reranked_results,
+            "compressed": compressed_results,
         }
     

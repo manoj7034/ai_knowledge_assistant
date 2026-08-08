@@ -39,6 +39,8 @@ class Settings(BaseSettings):
     LLM_MODEL: str
     LLM_PROVIDER: str = "ollama"
 
+    CHUNKING_STRATEGY: str = "recursive"
+    SEMANTIC_CHUNK_THRESHOLD: float = 0.35
 
     model_config = SettingsConfigDict(
         env_file=BASE_DIR / ".env",

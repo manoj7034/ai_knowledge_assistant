@@ -18,6 +18,8 @@ from app.services.search_service import SearchService
 from app.storage.base import StorageProvider
 from app.rerankers.service import CrossEncoderService
 from app.dependencies.app_state import get_reranker
+from app.compression.service import ContextCompressionService
+from app.dependencies.app_state import get_compressor
 
 
 def get_authentication_service(
@@ -63,6 +65,7 @@ def get_search_service(
     vector_store: WeaviateStore = Depends(get_vector_store),
     rank_fusion: ReciprocalRankFusion = Depends(get_rank_fusion),
     reranker: CrossEncoderService = Depends(get_reranker),
+    compressor: ContextCompressionService = Depends(get_compressor),
 ) -> SearchService:
 
     return SearchService(
@@ -70,6 +73,7 @@ def get_search_service(
         vector_store=vector_store,
         rank_fusion=rank_fusion,
         reranker=reranker,
+        compressor=compressor
     )
 
 

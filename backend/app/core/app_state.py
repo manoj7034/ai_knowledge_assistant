@@ -6,11 +6,11 @@ from app.llms.manager import initialize_llm
 from app.llms.manager import shutdown_llm
 from app.vectorstores.manager import shutdown_vector_store
 from app.rerankers.manager import initialize_reranker, shutdown_reranker, get_reranker
+from app.compression.manager import initialize_compressor, shutdown_compressor, get_compressor
 
 
 def initialize_app_state(app: FastAPI) -> None:
     # Initialize shared application resources.
-
     # These resources are created once during startup and reused throughout the application's lifetime.
 
     app.state.embedding_service = initialize_embedding_service()
@@ -19,6 +19,9 @@ def initialize_app_state(app: FastAPI) -> None:
 
     initialize_reranker()
     app.state.reranker = get_reranker()
+
+    initialize_compressor()
+    app.state.compressor = get_compressor()
 
     app.state.llm = initialize_llm()
 
@@ -29,5 +32,7 @@ def shutdown_app_state(app: FastAPI) -> None:
     shutdown_vector_store()
 
     shutdown_reranker()
+
+    shutdown_compressor()
 
     shutdown_llm()
