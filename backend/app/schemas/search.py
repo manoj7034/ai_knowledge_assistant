@@ -12,11 +12,18 @@ class SearchResult(BaseModel):
     score: float
 
 
+class FusionSearchResult(SearchResult):
+    rrf_score: float
+
+
+class RerankedSearchResult(FusionSearchResult):
+    rerank_score: float
+
+
 class HybridSearchResponse(BaseModel):
     semantic: list[SearchResult]
     keyword: list[SearchResult]
     fusion: list[SearchResult]
+    reranked: list[RerankedSearchResult]
 
 
-class FusionSearchResult(SearchResult):
-    rrf_score: float

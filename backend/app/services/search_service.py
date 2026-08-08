@@ -1,6 +1,7 @@
 from app.embeddings.service import EmbeddingService
 from app.vectorstores.weaviate_store import WeaviateStore
 from app.retrieval.rrf import ReciprocalRankFusion
+from app.rerankers.service import CrossEncoderService
 
 
 class SearchService:
@@ -10,10 +11,12 @@ class SearchService:
         embedding_service: EmbeddingService,
         vector_store: WeaviateStore,
         rank_fusion: ReciprocalRankFusion,
+        reranker: CrossEncoderService,
     ):
         self.embedding_service = embedding_service
         self.vector_store = vector_store
         self.rank_fusion = rank_fusion
+        self.reranker = reranker
 
     def search(
         self,
@@ -43,10 +46,16 @@ class SearchService:
             semantic_results,
             keyword_results,
         )
+
+        reranked_results = self.reranker.rerank(
+            query=query,
+            documents=fusion_results,
+        )
         
         return {
             "semantic": semantic_results,
             "keyword": keyword_results,
             "fusion": fusion_results,
+            "reranked": reranked_results,
         }
     
