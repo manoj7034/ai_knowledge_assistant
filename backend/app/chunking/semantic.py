@@ -1,11 +1,11 @@
-import re
 from typing import Any
+import re
 
-from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 
 from app.chunking.base import TextChunker
 from app.config.settings import settings
+from app.embeddings.service import EmbeddingService
 
 
 class SemanticChunker(TextChunker):
@@ -14,28 +14,28 @@ class SemanticChunker(TextChunker):
 
     Workflow:
         1. Split text into sentences.
-        2. Generate embeddings for each sentence.
+        2. Generate embeddings using the shared EmbeddingService.
         3. Compute cosine similarity between adjacent sentences.
-        4. (Next Step) Group semantically similar sentences into chunks.
+        4. Create a new chunk when similarity falls below the threshold.
     """
 
     def __init__(
         self,
+        embedding_service: EmbeddingService,
         similarity_threshold: float = settings.SEMANTIC_CHUNK_THRESHOLD,
     ):
-        self.model = SentenceTransformer(
-            "sentence-transformers/all-MiniLM-L6-v2"
-        )
-
+        self.embedding_service = embedding_service
         self.similarity_threshold = similarity_threshold
 
     def split(
         self,
         text: str,
     ) -> list[str]:
-        
-        # Split text into semantic chunks based on sentence similarity.
-        
+        """
+        Split text into semantic chunks based on
+        similarity between adjacent sentences.
+        """
+
         sentences = self._split_sentences(text)
 
         if not sentences:
@@ -59,14 +59,25 @@ class SemanticChunker(TextChunker):
         for i, similarity in enumerate(similarities):
 
             if similarity >= self.similarity_threshold:
-                current_chunk.append(sentences[i + 1])
+
+                current_chunk.append(
+                    sentences[i + 1]
+                )
 
             else:
-                chunks.append(" ".join(current_chunk))
-                current_chunk = [sentences[i + 1]]
+
+                chunks.append(
+                    " ".join(current_chunk)
+                )
+
+                current_chunk = [
+                    sentences[i + 1]
+                ]
 
         if current_chunk:
-            chunks.append(" ".join(current_chunk))
+            chunks.append(
+                " ".join(current_chunk)
+            )
 
         return chunks
 
@@ -74,8 +85,9 @@ class SemanticChunker(TextChunker):
         self,
         text: str,
     ) -> list[str]:
-        
-        # Split a document into sentences.
+        """
+        Split text into individual sentences.
+        """
 
         sentences = re.split(
             r"(?<=[.!?])\s+",
@@ -91,31 +103,36 @@ class SemanticChunker(TextChunker):
     def _generate_embeddings(
         self,
         sentences: list[str],
-    ) -> Any:
-        
-        # Generate normalized sentence embeddings.
+    ) -> list[list[float]]:
+        """
+        Generate normalized sentence embeddings
+        using the shared EmbeddingService.
+        """
 
-        return self.model.encode(
+        return self.embedding_service.generate_embeddings(
             sentences,
-            convert_to_numpy=True,
-            normalize_embeddings=True,
         )
 
     def _calculate_similarities(
         self,
         embeddings: Any,
     ) -> list[float]:
-        # Compute cosine similarity between adjacent sentence embeddings.
+        """
+        Calculate cosine similarity between
+        adjacent sentence embeddings.
+        """
 
         similarities: list[float] = []
 
         for i in range(len(embeddings) - 1):
 
             similarity = cosine_similarity(
-                [embeddings[i]],
-                [embeddings[i + 1]],
+                [embeddings[i]],  # type: ignore
+                [embeddings[i + 1]],  # type: ignore
             )[0][0]
 
-            similarities.append(float(similarity))
+            similarities.append(
+                float(similarity)
+            )
 
         return similarities

@@ -51,6 +51,7 @@ htmlcov/
 
 # Tests
 backend/tests
+backend/app/scripts/
 backend/app/chunking/test.py
 
 # Storage

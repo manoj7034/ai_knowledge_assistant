@@ -30,7 +30,9 @@ class DocumentProcessingService:
         self.document_repository = DocumentRepository(db)
         self.chunk_repository = DocumentChunkRepository(db)
 
-        self.chunker = ChunkerFactory.get_chunker()
+        self.chunker = ChunkerFactory.get_chunker(
+            embedding_service=self.embedding_service
+        )
 
     def process_document(
         self,

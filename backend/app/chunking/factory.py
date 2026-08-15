@@ -1,32 +1,40 @@
 from app.chunking.base import TextChunker
+from app.chunking.layout import LayoutAwareChunker
 from app.chunking.recursive import RecursiveChunker
 from app.chunking.semantic import SemanticChunker
 from app.config.settings import settings
-
-from app.config.settings import settings
+from app.embeddings.service import EmbeddingService
 
 
 class ChunkerFactory:
 
     @staticmethod
     def get_chunker(
-        strategy: str = "recursive",
+        embedding_service: EmbeddingService,
+        strategy: str = settings.CHUNKING_STRATEGY,
     ) -> TextChunker:
 
         strategy = strategy.lower()
 
-        chunker = ChunkerFactory.get_chunker(
-    settings.CHUNKING_STRATEGY
-)
-
         if strategy == "recursive":
+
             return RecursiveChunker(
                 chunk_size=settings.CHUNK_SIZE,
                 chunk_overlap=settings.CHUNK_OVERLAP,
             )
 
-        elif strategy == "semantic":
-            return SemanticChunker()
+        if strategy == "semantic":
+
+            return SemanticChunker(
+                embedding_service=embedding_service,
+            )
+
+        if strategy == "layout":
+
+            return LayoutAwareChunker(
+                chunk_size=settings.CHUNK_SIZE,
+                chunk_overlap=settings.CHUNK_OVERLAP,
+            )
 
         raise ValueError(
             f"Unsupported chunking strategy: {strategy}"

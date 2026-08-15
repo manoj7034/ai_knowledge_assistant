@@ -1,5 +1,6 @@
 import fitz
 from pathlib import Path
+
 from app.extractors.base import DocumentExtractor
 
 
@@ -13,10 +14,23 @@ class PDFExtractor(DocumentExtractor):
         document = fitz.open(file_path)
 
         try:
+
             pages = []
 
-            for page in document:
-                pages.append(page.get_text())
+            for page_number, page in enumerate(
+                document,
+                start=1,
+            ):
+
+                page_text = page.get_text()
+
+                if not page_text.strip():
+                    continue
+
+                pages.append(
+                    f"\n[PAGE {page_number}]\n"
+                    f"{page_text.strip()}\n"
+                )
 
             return "\n".join(pages)
 
