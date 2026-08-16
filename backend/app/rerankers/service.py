@@ -14,6 +14,7 @@ class CrossEncoderService:
         self,
         query: str,
         documents: list[dict],
+        limit: int | None = None,
     ) -> list[dict]:
 
         if not documents:
@@ -35,5 +36,8 @@ class CrossEncoderService:
             key=lambda x: x["rerank_score"],
             reverse=True,
         )
+
+        if limit is not None:
+            reranked_documents = reranked_documents[:limit]
 
         return reranked_documents

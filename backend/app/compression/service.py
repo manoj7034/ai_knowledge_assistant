@@ -1,4 +1,5 @@
 from typing import Any
+from app.config.settings import settings
 
 
 class ContextCompressionService:
@@ -8,15 +9,18 @@ class ContextCompressionService:
         self,
         documents: list[dict[str, Any]],
         *,
-        threshold: float = 0.0,
+        threshold: float | None = None,
     ) -> list[dict]:
 
         if not documents:
             return []
 
+        if threshold is None:
+            threshold = settings.RERANK_SCORE_THRESHOLD
+
         documents = sorted(
             documents,
-            key=lambda x: x.get("rerank_score", 0),
+            key=lambda x: x.get("rerank_score", float("-inf")),
             reverse=True,
         )
 

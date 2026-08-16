@@ -17,9 +17,12 @@ from app.services.document_service import DocumentService
 from app.services.search_service import SearchService
 from app.storage.base import StorageProvider
 from app.rerankers.service import CrossEncoderService
-from app.dependencies.app_state import get_reranker
+from app.dependencies.app_state import get_reranker, get_llm
 from app.compression.service import ContextCompressionService
 from app.dependencies.app_state import get_compressor
+from app.rag.context_builder import ContextBuilder
+from app.rag.prompt_builder import RAGPromptBuilder
+from app.services.rag_service import RAGService
 
 
 def get_authentication_service(
@@ -87,4 +90,15 @@ def get_chat_service(
         embedding_service=embedding_service,
         vector_store=vector_store,
         llm=llm,
+    )
+
+
+def get_rag_service(
+    llm: LLMProvider = Depends(get_llm),
+) -> RAGService:
+
+    return RAGService(
+        llm=llm,
+        context_builder=ContextBuilder(),
+        prompt_builder=RAGPromptBuilder(),
     )

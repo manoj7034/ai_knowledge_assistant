@@ -39,8 +39,15 @@ class Settings(BaseSettings):
     LLM_MODEL: str
     LLM_PROVIDER: str = "ollama"
 
-    CHUNKING_STRATEGY: str = "layout"
+    CHUNKING_STRATEGY: str = "semantic"
     SEMANTIC_CHUNK_THRESHOLD: float = 0.70
+    RERANK_SCORE_THRESHOLD: float = 0.0
+
+    SEMANTIC_TOP_K: int = 10
+    BM25_TOP_K: int = 10
+    RRF_TOP_K: int = 10
+    RERANK_TOP_K: int = 5
+    # FINAL_TOP_K: int = 3
 
     model_config = SettingsConfigDict(
         env_file=BASE_DIR / ".env",

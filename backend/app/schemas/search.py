@@ -12,6 +12,12 @@ class SearchResult(BaseModel):
     score: float
 
 
+class SearchFilters(BaseModel):
+    document_id: UUID | None = None
+    content_type: str | None = None
+    filename: str | None = None
+
+
 class FusionSearchResult(SearchResult):
     rrf_score: float
 
@@ -23,7 +29,7 @@ class RerankedSearchResult(FusionSearchResult):
 class HybridSearchResponse(BaseModel):
     semantic: list[SearchResult]
     keyword: list[SearchResult]
-    fusion: list[SearchResult]
+    fusion: list[FusionSearchResult]
     reranked: list[RerankedSearchResult]
     compressed: list[RerankedSearchResult]
 

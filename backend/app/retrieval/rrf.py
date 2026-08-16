@@ -25,6 +25,7 @@ class ReciprocalRankFusion:
     def fuse(
         self,
         *result_lists: Iterable[dict[str, Any]],
+        limit: int | None = None,
     ) -> list[dict[str, Any]]:
         """
         Fuse multiple ranked result lists into one.
@@ -73,5 +74,8 @@ class ReciprocalRankFusion:
             key=lambda x: x["rrf_score"],
             reverse=True,
         )
+
+        if limit is not None:
+            fused_results = fused_results[:limit]
 
         return fused_results
