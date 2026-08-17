@@ -23,6 +23,8 @@ from app.dependencies.app_state import get_compressor
 from app.rag.context_builder import ContextBuilder
 from app.rag.prompt_builder import RAGPromptBuilder
 from app.services.rag_service import RAGService
+from app.rag.context_builder import ContextBuilder
+from app.rag.prompt_builder import RAGPromptBuilder
 
 
 def get_authentication_service(
@@ -81,15 +83,15 @@ def get_search_service(
 
 
 def get_chat_service(
-    embedding_service: EmbeddingService = Depends(get_embedding_service),
-    vector_store: WeaviateStore = Depends(get_vector_store),
+    search_service: SearchService = Depends(get_search_service),
     llm: LLMProvider = Depends(get_llm),
 ) -> ChatService:
 
     return ChatService(
-        embedding_service=embedding_service,
-        vector_store=vector_store,
+        search_service=search_service,
         llm=llm,
+        context_builder=ContextBuilder(),
+         prompt_builder=RAGPromptBuilder(),
     )
 
 

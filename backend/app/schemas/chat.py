@@ -9,6 +9,7 @@ class ChatRequest(BaseModel):
 class Source(BaseModel):
     document_id: UUID
     filename: str
+    chunk_id: str
     chunk_index: int
     score: float
 

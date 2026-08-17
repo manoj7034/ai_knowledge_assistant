@@ -5,7 +5,7 @@ from app.llms.factory import LLMProviderFactory
 _llm: LLMProvider | None = None
 
 
-def initialize_llm() -> None:
+def initialize_llm() -> LLMProvider:
     global _llm
 
     if _llm is None:
@@ -13,8 +13,11 @@ def initialize_llm() -> None:
         _llm = LLMProviderFactory.get_provider()
         print("LLM ready.")
 
+    return _llm
+
 
 def get_llm() -> LLMProvider:
+
     if _llm is None:
         raise RuntimeError(
             "LLM has not been initialized."
@@ -25,4 +28,5 @@ def get_llm() -> LLMProvider:
 
 def shutdown_llm() -> None:
     global _llm
+
     _llm = None

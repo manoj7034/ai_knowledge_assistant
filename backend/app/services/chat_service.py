@@ -1,7 +1,8 @@
-from app.embeddings.service import EmbeddingService
 from app.llms.base import LLMProvider
-from app.prompts.rag_prompt import build_rag_prompt
-from app.vectorstores.weaviate_store import WeaviateStore
+from app.rag.context_builder import ContextBuilder
+from app.rag.prompt_builder import RAGPromptBuilder
+from app.schemas.search import SearchFilters
+from app.services.search_service import SearchService
 
 
 class ChatService:
@@ -9,57 +10,81 @@ class ChatService:
     def __init__(
         self,
         *,
-        embedding_service: EmbeddingService,
-        vector_store: WeaviateStore,
+        search_service: SearchService,
         llm: LLMProvider,
+        context_builder: ContextBuilder,
+        prompt_builder: RAGPromptBuilder,
     ):
 
-        self.embedding_service = embedding_service
-        self.vector_store = vector_store
+        self.search_service = search_service
         self.llm = llm
+        self.context_builder = context_builder
+        self.prompt_builder = prompt_builder
 
     def ask(
         self,
         *,
         question: str,
         owner_id: str,
+        filters: SearchFilters | None = None,
     ) -> dict:
 
-        query_vector = self.embedding_service.generate_embeddings(
-            [question],
-            )[0]
+        # Retrieval
 
-        results = self.vector_store.semantic_search(
-            query_vector=query_vector, 
+        retrieval = self.search_service.search(
+            query=question,
             owner_id=owner_id,
-            )
+            filters=filters,
+        )
 
-        if not results:
+        compressed_results = retrieval["compressed"]
+
+        # No relevant context
+
+        if not compressed_results:
+
             return {
-                "answer": "I couldn't find anything relevant in your documents.", 
+                "answer": (
+                    "I couldn't find enough relevant "
+                    "information in your documents "
+                    "to answer this question."
+                ),
                 "sources": [],
-                }
+            }
 
-        prompt = build_rag_prompt(
-            question=question, 
-            contexts=results,
-            )
+        # Build Context
 
-        answer = self.llm.generate(
-            prompt=prompt,
-            )
+        context = self.context_builder.build(
+            compressed_results,
+        )
+
+        # Build RAG prompt
+
+        prompt = self.prompt_builder.build(
+            query=question,
+            context=context,
+        )
+
+        # Generate answer
+
+        answer = self.llm.generate(prompt)
+
+        # Build sources
 
         sources = [
             {
-                "document_id": str(item["document_id"]),
+                "document_id": str(
+                    item["document_id"]
+                ),
                 "filename": item["filename"],
-                "chunk_index": item["chunk_index"],
-                "score": item["score"],
+                "chunk_id": item["chunk_id"],
+                "chunk_index": int(item["chunk_index"]),
+                "score": float(item["rerank_score"]),
             }
-            for item in results
+            for item in compressed_results
         ]
 
         return {
-        "answer": answer,
-        "sources": sources,
+            "answer": answer,
+            "sources": sources,
         }

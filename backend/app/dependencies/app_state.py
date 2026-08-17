@@ -39,4 +39,11 @@ def get_llm(
     request: Request,
 ) -> LLMProvider:
 
-    return request.app.state.llm
+    llm = request.app.state.llm
+
+    if llm is None:
+        raise RuntimeError(
+            "LLM has not been initialized."
+        )
+
+    return llm
